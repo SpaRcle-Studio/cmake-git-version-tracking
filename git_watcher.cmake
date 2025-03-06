@@ -324,12 +324,14 @@ endfunction()
 #              check the state of git before every build. If the state has
 #              changed, then a file is configured.
 function(SetupGitMonitoring)
-    add_custom_target(check_git
-        ALL
-        DEPENDS ${PRE_CONFIGURE_FILE}
-        BYPRODUCTS
-            ${POST_CONFIGURE_FILE}
-            ${GIT_STATE_FILE}
+    # Создаем пустой файл, который будет обновляться только при переконфигурации
+    set(TRIGGER_FILE "${CMAKE_BINARY_DIR}/git_monitor_trigger")
+    file(WRITE ${TRIGGER_FILE} "")
+
+    # Добавляем кастомную команду, которая выполняется только при переконфигурации
+    add_custom_command(
+        OUTPUT ${POST_CONFIGURE_FILE}  # Файл, который создается после выполнения
+        DEPENDS ${TRIGGER_FILE}  # Зависит от файла, который меняется только при переконфигурации
         COMMENT "Checking the git repository for changes..."
         COMMAND
             ${CMAKE_COMMAND}
@@ -341,7 +343,11 @@ function(SetupGitMonitoring)
             -DPOST_CONFIGURE_FILE=${POST_CONFIGURE_FILE}
             -DGIT_FAIL_IF_NONZERO_EXIT=${GIT_FAIL_IF_NONZERO_EXIT}
             -DGIT_IGNORE_UNTRACKED=${GIT_IGNORE_UNTRACKED}
-            -P "${CMAKE_CURRENT_LIST_FILE}")
+            -P "${CMAKE_CURRENT_LIST_FILE}"
+    )
+
+    # Добавляем кастомный таргет, который зависит от OUTPUT кастомной команды
+    add_custom_target(check_git ALL DEPENDS ${POST_CONFIGURE_FILE})
 endfunction()
 
 
