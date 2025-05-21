@@ -17,6 +17,10 @@ add_library(${PROJECT_NAME} STATIC ${POST_CONFIGURE_FILE})
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_dependencies(${PROJECT_NAME} check_git)
 
+if (UNIX)
+    target_compile_options(${PROJECT_NAME} PRIVATE -fPIC)
+endif()
+
 # The C99 standard is only required because we're using <stdbool.h>.
 # This could be removed if it's a problem for users, but would require the
 # cmake configure() commands to translate true/false literals to 1/0.
